@@ -1,0 +1,40 @@
+
+#mapper.py
+import sys
+import csv
+
+# Read from standard input
+reader = csv.reader(sys.stdin)
+next(reader)  # Skip header
+
+for row in reader:
+    date = row[0]
+    max_temp = row[2]
+    min_temp = row[3]
+    year = date.split("-")[0]
+    print(f"{year}\t{max_temp},{min_temp}")
+
+
+#reducer.py
+import sys
+temps = {}  # {year: [max_temp, min_temp]}
+
+for line in sys.stdin:
+    year, values = line.strip().split("\t")
+    max_t, min_t = map(float, values.split(","))
+
+    if year not in temps:
+        temps[year] = [max_t, min_t]
+    else:
+        temps[year][0] = max(temps[year][0], max_t)
+        temps[year][1] = min(temps[year][1], min_t)
+
+# Find hottest and coolest years
+hottest = max(temps.items(), key=lambda x: x[1][0])
+coolest = min(temps.items(), key=lambda x: x[1][1])
+
+print(f"Hottest Year: {hottest[0]} ({hottest[1][0]}°C)")
+print(f"Coolest Year: {coolest[0]} ({coolest[1][1]}°C)")
+
+##type weather.csv | python mapper.py > mapped.txt
+##sort mapped.txt | python reducer.py
